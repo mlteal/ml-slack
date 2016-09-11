@@ -6,7 +6,9 @@
 class ML_Slack {
 
 	static $api_namespace = 'ml/v1';
-	static $mojibot_trigger_words = 'emojify,hey mojibot,mojibot,yo mojibot';
+	// future trigger words to build out:
+//	static $mojibot_trigger_words = 'emojify,hey mojibot,mojibot,yo mojibot';
+	static $mojibot_trigger_words = 'emojify';
 
 	static function register_rest_route() {
 		register_rest_route( static::$api_namespace, '/mojibot', array(
@@ -125,12 +127,7 @@ The image will be auto-cropped and resized as needed before it's uploaded as an 
 				// the add_emoji_to_slack function should return a message
 				$request = static::add_emoji_to_slack( $slug, $image_path );
 
-				/**
-				 * TODO: use the channel details to post the message with resulting emoji
-				 *
-				 * I think the message isn't posting because it takes longer to respond
-				 * than Slack allows for (_if_ the WP upload and Slack upload succeeds!)
-				 */
+				// send the response message back to Slack
 				return array( 'text' => $request );
 
 			} elseif ( 'emojify' == $_REQUEST['trigger_word'] ) {
