@@ -78,9 +78,9 @@ The image will be auto-cropped and resized as needed before it's uploaded as an 
 				$image_url = str_replace( array( '<', '>', '&lt;', '&gt;' ), '', $item[1] );
 
 				$wp_image_atts = array(
-					'title' => $slug,
+					'title'     => $slug,
 					'user_name' => $_REQUEST['user_name'],
-					'user_id' => $_REQUEST['user_id'],
+					'user_id'   => $_REQUEST['user_id'],
 				);
 
 				$wp_image = static::upload_image_to_wp( $image_url, $wp_image_atts );
@@ -115,7 +115,11 @@ The image will be auto-cropped and resized as needed before it's uploaded as an 
 				if ( defined( 'ML_SLACK_DEBUG' ) && true == ML_SLACK_DEBUG ) {
 					// if emoji uploads are failing, it could be because the image path string replace isn't working!
 					// at least this could give us some info
-					error_log( var_export( array( 'slug' => $slug, 'image_path' => $image_path, 'uploads' => $uploads ), true ) );
+					error_log( var_export( array(
+						'slug'       => $slug,
+						'image_path' => $image_path,
+						'uploads'    => $uploads
+					), true ) );
 				}
 
 				// the add_emoji_to_slack function should return a message
@@ -299,17 +303,15 @@ The image will be auto-cropped and resized as needed before it's uploaded as an 
 		// run it again now that I have the newest crumb value
 		curl_setopt( $ch, CURLOPT_URL, $domain . '/customize/emoji' );
 		curl_setopt( $ch, CURLOPT_POSTFIELDS, $args );
+		curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, 0 );
 
-		$html_emoji_uploaded = curl_exec( $ch );
+		curl_exec( $ch );
+		// pull the final URL from this last cURL call so we can get the params from it
+		$redirect_url = curl_getinfo( $ch, CURLINFO_REDIRECT_URL );
 		curl_close( $ch );
 
-		$dom = new simple_html_dom();
-		$dom->load( $html_emoji_uploaded );
-		$message = $dom->find( 'p.alert.alert_success', 0 );
-
 		// if there's something there, consider this a success
-		// TODO: It's probably better to be checking the redirect URL instead of the resulting page since they have a confirmation in there
-		if ( ! empty( $message ) ) {
+		if ( ! empty( $redirect_url ) && stristr( $redirect_url, 'added=1' ) ) {
 			return 'Your emoji has been uploaded, check it! :' . $slug . ': ';
 		}
 
